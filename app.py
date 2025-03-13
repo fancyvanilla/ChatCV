@@ -5,7 +5,7 @@ from rag.rag import query_rag, clear_data as clear_rag
 import os
 from dotenv import load_dotenv
 from auth.authenticate import Authentificator
-from utils import get_messages
+from utils import get_messages, get_config_variable
 
 load_dotenv()
 @st.cache_data
@@ -81,10 +81,11 @@ if st.session_state["connected"]:
         text_loader=st.text("loading data...")
         process_files(uploaded_files)
         text_loader.text("")
-    file_exists=os.path.isfile(os.environ["OUTPUT_DATA_PATH"]) and os.path.getsize(os.environ["OUTPUT_DATA_PATH"])>0
+    data_path=os.path.join(os.environ["OUTPUT_DIR_PATH"], get_config_variable("CSV_FILE_NAME"))
+    file_exists=os.path.isfile(data_path) and os.path.getsize(data_path)>0
     if file_exists:
         try:
-            df=pd.read_csv(os.environ["OUTPUT_DATA_PATH"],encoding="utf-8")
+            df=pd.read_csv(data_path, encoding="utf-8")
             if not df.empty:
                 st.subheader("Your candidates:")
                 clicked=st.button("Clear data")
@@ -100,7 +101,7 @@ if st.session_state["connected"]:
                 st.dataframe(df)
                 if prompt:=st.chat_input("Filter your candidates..."):
                     rag_loader=st.text("✨✨...Processing...✨✨")
-                    refined_candidates = query_rag(prompt,user_preferences)
+                    refined_candidates = query_rag(prompt,user_preferences,data_path)
                     refined_candidates = eval(refined_candidates)
                     if len(refined_candidates) == 0:
                         rag_loader.write("No candidates found.")

@@ -8,9 +8,10 @@ from .types import Candidate
 from constants import CANDIDATE_FIELD_NAMES
 from llm import groq_llm_response
 from prompts import json_loader_prompt as prompt
+from utils import check_path, get_config_variable
 from dotenv import load_dotenv
+import streamlit as st
 import pandas as pd
-
 load_dotenv()
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -43,30 +44,29 @@ def cv2json(file)->Candidate:
     except Exception as  e:
         print("Validation error: ",e)
 
-def email_exists(email):
+def email_exists(email, data_path):
     try:
-        df=pd.read_csv(os.environ["OUTPUT_DATA_PATH"],encoding="utf-8")
-        return df["email"].str.contains(email).any()
-    except:
-      return False
+        df=pd.read_csv(data_path)
+        return email in df["email"].values
+    except Exception as e:
+        return False
 
 def cvs2csv(filenames):
+    output_path=os.path.join(check_path(os.environ["OUTPUT_DIR_PATH"]), get_config_variable("CSV_FILE_NAME"))
     emails=set()
-    output_dir = os.path.dirname(os.environ["OUTPUT_DATA_PATH"])
-    if not os.path.isdir(output_dir):
-        os.makedirs(output_dir)
-    with open(os.environ["OUTPUT_DATA_PATH"], mode="a+", newline="", encoding="utf-8") as f:
+    with open(output_path, mode="a+", newline="", encoding="utf-8") as f:
         writer=csv.DictWriter(f,fieldnames=CANDIDATE_FIELD_NAMES)
         if f.tell()==0:
             writer.writeheader()
         for file in filenames:
             json_data=cv2json(file)
-            if json_data and not email_exists(json_data["email"]) and not json_data["email"] in emails:
+            if json_data and not json_data["email"] in emails and not email_exists(json_data["email"], output_path):
               writer.writerow(json_data)
               emails.add(json_data["email"])
-    
+
 def clear_csv():
-    with open(os.environ["OUTPUT_DATA_PATH"], mode="w", newline="", encoding="utf-8") as f:
+    data_path=os.path.join(check_path(os.environ["OUTPUT_DIR_PATH"]), get_config_variable("CSV_FILE_NAME"))
+    with open(data_path, mode="w", newline="", encoding="utf-8") as f:
         writer=csv.DictWriter(f,fieldnames=CANDIDATE_FIELD_NAMES)
         writer.writerows([])
         

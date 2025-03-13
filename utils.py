@@ -4,6 +4,8 @@ import base64
 from dotenv import load_dotenv
 from constants import GMAIL_API
 import os
+import streamlit as st
+import json
 load_dotenv()
 
 def get_messages(email,before,after,subject,token)->list[str]:
@@ -47,13 +49,22 @@ def get_messages(email,before,after,subject,token)->list[str]:
                 data=part["data"]
                 attachements[message["id"]]={"filename":filename,"data":data}
                 break
-    if not os.path.isdir(os.environ["USER_GMAIL_DATA_PATH"]):
-        os.makedirs(os.environ["USER_GMAIL_DATA_PATH"])
+    data_path=check_path(os.environ["USER_GMAIL_DIR_PATH"])
     for _ ,data in attachements.items():
-        file_path=os.path.join(os.environ["USER_GMAIL_DATA_PATH"],data["filename"] )
+        file_path=os.path.join(data_path, data["filename"] )
         with open( file_path ,"wb") as f:
             f.write(base64.urlsafe_b64decode(data["data"]))
         files.append(file_path)
     return files
 
-        
+
+def check_path(path):
+    dir_path=os.path.abspath(path)
+    if not os.path.isdir(dir_path):
+        os.makedirs(dir_path)
+    return dir_path
+       
+def get_config_variable(variable):
+    with open("config.json", "r") as f:
+        config=json.load(f)
+    return config[variable]

@@ -5,6 +5,7 @@ import json
 import re
 import csv
 from .types import Candidate
+from constants import CANDIDATE_FIELD_NAMES
 from llm import groq_llm_response
 from prompts import json_loader_prompt as prompt
 from dotenv import load_dotenv
@@ -12,7 +13,6 @@ import pandas as pd
 
 load_dotenv()
 sys.stdout.reconfigure(encoding='utf-8')
-field_names=["name","email","skills","certificates","education","experiences"]
 
 def extract_json(text):
     match = re.search(r'({.*})', text, re.DOTALL)
@@ -52,8 +52,11 @@ def email_exists(email):
 
 def cvs2csv(filenames):
     emails=set()
+    output_dir = os.path.dirname(os.environ["OUTPUT_DATA_PATH"])
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
     with open(os.environ["OUTPUT_DATA_PATH"], mode="a+", newline="", encoding="utf-8") as f:
-        writer=csv.DictWriter(f,fieldnames=field_names)
+        writer=csv.DictWriter(f,fieldnames=CANDIDATE_FIELD_NAMES)
         if f.tell()==0:
             writer.writeheader()
         for file in filenames:
@@ -64,6 +67,6 @@ def cvs2csv(filenames):
     
 def clear_csv():
     with open(os.environ["OUTPUT_DATA_PATH"], mode="w", newline="", encoding="utf-8") as f:
-        writer=csv.DictWriter(f,fieldnames=field_names)
+        writer=csv.DictWriter(f,fieldnames=CANDIDATE_FIELD_NAMES)
         writer.writerows([])
         

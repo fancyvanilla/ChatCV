@@ -12,7 +12,7 @@ load_dotenv()
 def process_files(files):
     cvs2csv(files)
 authenticator=Authentificator(
-    secret_path="client_secret.json",
+    secret_path=os.environ["CLIENT_SECRET_PATH"],
     redirect_uri="http://localhost:8501",
     token_key=os.environ["TOKEN_KEY"]
 )

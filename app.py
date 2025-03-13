@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from csv_parser.loader import cvs2csv,clear_csv
+from parser.loader import cvs2csv,clear_csv
 from rag.rag import query_rag, clear_data as clear_rag
 import os
 from dotenv import load_dotenv
